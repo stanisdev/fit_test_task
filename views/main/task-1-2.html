@@ -11,9 +11,42 @@
   <br/>
   <hr>
   <h4>Способы обработки данных</h4>
+  <hr>
+  <br/>
+
+  <b>Сортировка</b>
+  <br>
+  <form action="/transform-data-1" method="post">
+    <label for="sorting_field" class="control-label">По полю</label>
+    <select name="sorting_field" class="form-control" id="sorting_field">
+      <option value="created">Created</option>
+      <option value="score">Score</option>
+    </select>
+
+    <br>
+    <label for="sorting_order_1" class="control-label">Порядок сортировки</label>
+    <select name="sorting_order" class="form-control" id="sorting_order_1">
+      <option value="asc">По возрастанию</option>
+      <option value="desc">По убыванию</option>
+    </select>
+    <br>
+    <button type="submit" class="btn btn-primary">Отправить</button>
+  </form>
+
+  <hr>
+
+  <b>Агрегация</b>
+  <br>
+  <form action="/transform-data-2" method="post">
+    <label for="sorting_order_2" class="control-label">Сортировать по</label>
+    <select name="sorting_order" class="form-control" id="sorting_order_2">
+      <option value="asc">По возрастанию</option>
+      <option value="desc">По убыванию</option>
+    </select>
+    <br>
+    <button type="submit" class="btn btn-primary">Отправить</button>
+  </form>
 
   <br/>
-  <hr>
-  <h4>Способы форматирования</h4>
 
 {% endblock %}

@@ -1,0 +1,28 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+
+  <h4>Вывод инофрмации</h4>
+  <hr>
+  <br/>
+
+  <b>CSV</b>
+  <br>
+  <form action="/get_csv" method="post">
+    <input name="delimiter" type="text" class="form-control" placeholder="Разделитель">
+    <br>
+    <button type="submit" class="btn btn-primary">Вывести</button>
+  </form>
+
+  <hr>
+
+  <b>SQL</b>
+  <br>
+  <form action="/get_sql" method="post">
+    <input name="table_name" type="text" class="form-control" placeholder="Имя таблицы">
+    <br>
+    <button type="submit" class="btn btn-primary">Вывести</button>
+  </form>
+
+
+{% endblock %}
