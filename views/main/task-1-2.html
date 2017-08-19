@@ -1,0 +1,19 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+
+  <form action="/load-json-from-reddit" method="post">
+    <input type="text" class="form-control" name="url" value="http://www.reddit.com/r/javascript/.json" placeholder="Укажите url">
+    <br/>
+    <button type="submit" class="btn btn-primary">Загрузить</button>
+  </form>
+
+  <br/>
+  <hr>
+  <h4>Способы обработки данных</h4>
+
+  <br/>
+  <hr>
+  <h4>Способы форматирования</h4>
+
+{% endblock %}
