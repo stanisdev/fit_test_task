@@ -1,7 +1,8 @@
 const conform = require("conform");
 const request = require("request");
 const Bluebird = require("bluebird");
-const json2csv = require("json2csv");
+const nunjucks = require("nunjucks");
+const glob = require("glob");
 const fs = require("fs");
 
 /**
@@ -23,11 +24,17 @@ module.exports = (app) => {
    * Task first and second
    */
   app.get("/task-1-2", (req, res) => {
-    const auxServices = app.get("services").intermedium.loadAuxiliaryServices(app.get("config"));
-
-    res.render("main/task-1-2.html", {
-      body_title: "Задание 1 и 2",
-      page_header: "Обработка данных с reddit"
+    // Load html-representation's all transformation ways
+    app.get("services").intermedium.loadHtmlRepresentations(app.get("config"), "transformation_ways", "обработки").then(ways => {
+      res.render("main/task-1-2.html", {
+        body_title: "Задание 1 и 2",
+        page_header: "Обработка данных с reddit",
+        ways: ways
+      });
+    }).catch(error => {
+      console.log(error);
+      let message = typeof error == "string" ? error : "Непредвиденная ошибка";
+      res.send(message);
     });
   });
 
@@ -87,66 +94,25 @@ module.exports = (app) => {
   /**
    * Describe me
    */
-  app.post("/transform-data-1", (req, res) => {
-    const field = req.body.sorting_field;
-    const order = req.body.sorting_order;
+  app.post("/transform-data", (req, res) => {
+    const wayType = req.query.way;
+    const errorHandler = app.get("services").intermedium.printError.bind(null, res);
+    const wayPath = app.get("config").root_dir + `/services/transformation_ways/${wayType}/way.js`;
 
-    const sorting = {};
-    sorting[field] = order == "asc" ? 1 : -1;
-    const collection = app.get("db").connection.collection("parsed_data");
-    collection.find(null, {
-      id: 1,
-      title: 1,
-      created: 1,
-      score: 1
-    }).sort(sorting).toArray(function(error, docs) {
-      if (error) {
+    fs.stat(wayPath, (error, stat) => {
+      if (error || !(stat instanceof Object)) {
         console.log(error);
-        return res.send("Ошибка во время обращения к БД");
+        return res.send("Способ обработки данных не найден");
       }
-      app.get("services").intermedium.saveTransformedData(app, res, docs).then(() => {
-        res.redirect("/task-1-2/treatment");
-      }).catch(app.get("services").intermedium.printError.bind(null, res));
-    });
-  });
+      // Way exists, include and use it
+      const way = require(wayPath);
+      way.transform(app, req.body).then(docs => {
 
-  /**
-   * Describe me
-   */
-  app.post("/transform-data-2", (req, res) => {
-    const order = req.body.sorting_order;
-
-    const sorting = {
-      total_count: order == "asc" ? 1 : -1
-    };
-    const collection = app.get("db").connection.collection("parsed_data");
-    collection.aggregate([
-      {
-        $group: {
-          _id: "$domain",
-          total_count: { $sum: 1 },
-          score_sum: { $sum: "$score" }
-        }
-      },
-      {
-        $sort: sorting
-      },
-      {
-        $project: {
-          domain: "$_id",
-          total_count: 1,
-          score_sum: 1,
-          _id: 0
-        }
-      }
-    ]).toArray(function(error, docs) {
-      if (error) {
-        console.log(error);
-        return res.send("Ошибка во время обращения к БД");
-      }
-      app.get("services").intermedium.saveTransformedData(app, res, docs).then(() => {
-        res.redirect("/task-1-2/treatment");
-      }).catch(app.get("services").intermedium.printError.bind(null, res));
+        // Save recieved docs
+        app.get("services").intermedium.saveTransformedData(app, res, docs).then(() => {
+          res.redirect("/task-1-2/treatment");
+        }).catch(errorHandler);
+      }).catch(errorHandler);
     });
   });
 
@@ -154,42 +120,74 @@ module.exports = (app) => {
    * Describe me
    */
   app.get("/task-1-2/treatment", (req, res) => {
-    res.render("main/treatment.html", {
-      body_title: "Задание 3 :: Преобразование информации",
-      page_header: "Экспорт"
+    app.get("services").intermedium.loadHtmlRepresentations(app.get("config"), "export_strategies", "экспорта").then(strategies => {
+      res.render("main/treatment.html", {
+        body_title: "Задание 3 :: Экспорт данных",
+        page_header: "Экспорт",
+        strategies: strategies
+      });
+    }).catch(error => {
+      console.log(error);
+      let message = typeof error == "string" ? error : "Непредвиденная ошибка";
+      res.send(message);
     });
   });
 
   /**
    * Describe me
    */
-  app.post("/get_csv", (req, res) => {
+  app.post("/export-data", (req, res) => {
+    const strategyType = req.query.strategy;
+    const strategyPath = app.get("config").root_dir + `/services/export_strategies/${strategyType}/strategy.js`;
 
-    const collection = app.get("db").connection.collection("transformed_data");
-    collection.find({}, {_id: 0}).toArray(function(error, docs) {
-      if (error) {
+    fs.stat(strategyPath, (error, stat) => {
+      if (error || !(stat instanceof Object)) {
         console.log(error);
-        return res.send("Ошибка во время выборки данных из БД");
+        return res.send("Способ экспорта данных не найден");
       }
-      if (!Array.isArray(docs) || docs.length < 1) {
-        return res.json("Данные не подлежат экспорту");
-      }
-      const fields = Object.keys(docs[0]);
-      var csv = json2csv({
-        data: docs,
-        fields: fields,
-        del: ","
-      });
-      const filePath = app.get("config").root_dir + "/file.csv";
-      fs.writeFile(filePath, csv, function(error) {
+      const strategy = require(strategyPath);
+
+      // Retrieve data
+      const collection = app.get("db").connection.collection("transformed_data");
+      collection.find({}, {_id: 0}).toArray(function(error, docs) {
         if (error) {
           console.log(error);
-          return res.send("Невозможно сохранить данные в файл");
+          return res.send("Ошибка во время выборки данных из БД");
         }
-        res.setHeader("Content-disposition", "attachment; filename=output.csv");
-        res.setHeader("Content-type", "text/plain");
-        const filestream = fs.createReadStream(filePath);
-        filestream.pipe(res);
+        if (!Array.isArray(docs) || docs.length < 1) {
+          return res.send("Данные не подлежат экспорту");
+        }
+        fs.stat(app.get("config").tmp_dir, (error, stat) => { // Check tmp folder existence
+
+          (new Promise((resolve, reject) => {
+            if (error) { // If folder does not exist, create it
+              fs.mkdir(app.get("config").tmp_dir, (error, response) => {
+                if (error) {
+                  return reject();
+                }
+                resolve();
+              });
+            } else {
+              resolve();
+            }
+          })).then(() => {
+            // Execute export strategy
+            strategy.export(docs, req.body, app.get("config").tmp_dir).then(data => {
+
+              // Download file
+              res.setHeader("Content-disposition", `attachment; filename=${data.fileName}`);
+              res.setHeader("Content-type", "text/plain");
+              const filestream = fs.createReadStream(data.filePath);
+              filestream.pipe(res);
+            }).catch(error => {
+              console.log(error);
+              res.send("Ошибка во время экспорта");
+            });
+          }).catch(error => {
+            console.log(error);
+            res.send("Непредвиденная ошибка")
+          });
+        });
       });
     });
   });

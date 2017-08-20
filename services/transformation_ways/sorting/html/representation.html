@@ -1,0 +1,13 @@
+<label for="sorting_field" class="control-label">По полю</label>
+<select name="sorting_field" class="form-control" id="sorting_field">
+  {% for field in sorting_by %}
+    <option value="{{ field }}">{{ field }}</option>
+  {% endfor %}
+</select>
+
+<br>
+<label for="sorting_order_1" class="control-label">Порядок сортировки</label>
+<select name="sorting_order" class="form-control" id="sorting_order_1">
+  <option value="asc">По возрастанию</option>
+  <option value="desc">По убыванию</option>
+</select>

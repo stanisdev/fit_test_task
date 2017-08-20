@@ -1,0 +1,9 @@
+{
+  "title": "Сортировка",
+  "html": {
+    "sorting_by": [
+      "created",
+      "score"
+    ]
+  }
+}
