@@ -8,22 +8,27 @@
     <button type="submit" class="btn btn-primary">Загрузить</button>
   </form>
 
-  <br/>
-  <hr>
-  <h4>Способы обработки данных</h4>
-  <hr>
-  <br/>
-
-  {% for way in ways %}
-    <h4 style="font-style: italic;">{{ way.config.title }}</h4>
+  {% if initial_running %}
     <br>
-    <form action="/transform-data?way={{ way.dirName }}" method="post">
-      {{ way.html | safe }}
-
-      <br>
-      <button type="submit" class="btn btn-primary">Отправить</button>
-    </form>
+    <h4>Для продолжения работы загрузите данные с reddit.</h4>
+  {% else %}
+    <br/>
     <hr>
-  {% endfor %}
+    <h4>Способы обработки данных</h4>
+    <hr>
+    <br/>
+
+    {% for way in ways %}
+      <h4 style="font-style: italic;">{{ way.config.title }}</h4>
+      <br>
+      <form action="/transform-data?way={{ way.dirName }}" method="post">
+        {{ way.html | safe }}
+
+        <br>
+        <button type="submit" class="btn btn-primary">Отправить</button>
+      </form>
+      <hr>
+    {% endfor %}
+  {% endif %}
 
 {% endblock %}

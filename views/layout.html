@@ -13,10 +13,10 @@
         </div>
         <div class="navbar-collapse collapse" id="navbar-main">
           <ul class="nav navbar-nav">
-            <li{% if url == '/task-1-2' %} class="active"{% endif %}>
+            <li{% if url == '/task-1-2' or url == '/task-1-2/treatment' or url == '/load-json-from-reddit' or url.indexOf('/export-data') > -1 %} class="active"{% endif %}>
               <a href="/task-1-2">Задание 1 и 2</a>
             </li>
-            <li{% if url == '/task-3' %} class="active"{% endif %}>
+            <li{% if url == '/task-3' or url == '/transform-array' %} class="active"{% endif %}>
               <a href="/task-3">Задание 3</a>
             </li>
           </ul>

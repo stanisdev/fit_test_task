@@ -1,7 +1,7 @@
 const way = {};
 
 /**
- * Put some describing here
+ * Transform data by aggregation
  */
 way.transform = (app, body) => {
   return new Promise((resolve, reject) => {

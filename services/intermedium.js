@@ -6,15 +6,15 @@ const nunjucks = require("nunjucks");
 const fs = require("fs");
 
 /**
- * Describe me
+ * Just print error on browser
  */
 service.printError = (res, err) => {
-  res.send("Ошибка во время запроса в БД");
+  res.send("Ошибка во время запроса к БД");
   console.log(err);
 };
 
 /**
- * Describe me
+ * Get sevice's pathes
  */
 service.getPathes = (config, folderPath) => {
   const pathes = glob.sync(config.root_dir + `/services/${folderPath}/*`);
@@ -28,7 +28,7 @@ service.getPathes = (config, folderPath) => {
 };
 
 /**
- * Describe me
+ * Load html from system entities folder
  */
 service.loadHtmlRepresentations = function(config, entityName, entityDescription) {
   return new Promise((resolve, reject) => {
@@ -56,19 +56,7 @@ service.loadHtmlRepresentations = function(config, entityName, entityDescription
 };
 
 /**
- * Describe me
- */
-service.loadAuxiliaryServices = function(config) {
-  const services = {};
-  ["transformation_ways", "export_strategies"].forEach(entity => {
-    let pathes = this.getPathes(config, entity);
-    services[entity] = pathes;
-  });
-  return services;
-};
-
-/**
- * Describe me
+ * Remove then save data
  */
 service.saveTransformedData = (app, res, data) => {
   return new Promise(function(resolve, reject) {

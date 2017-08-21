@@ -1,3 +1,12 @@
 {
-  "title": "SQL"
+  "title": "SQL",
+  "validation_fields": {
+    "table_name": {
+      "description": "Имя таблицы",
+      "type": "string",
+      "required": true,
+      "minLength": 1,
+      "message": "Укажите имя таблицы для экспорта данных в SQL"
+    }
+  }
 }

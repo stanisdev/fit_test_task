@@ -2,6 +2,20 @@
 
 {% block content %}
 
-Третий таск
+<form action="/transform-array" method="post">
+  <textarea name="array" class="form-control" rows="10" id="textArea">
+[
+{ "id":	1,	"parentId":	0 },
+{ "id":	2,	"parentId":	0 },
+{ "id":	3,	"parentId":	1 },
+{ "id":	4,	"parentId":	1 },
+{ "id":	5,	"parentId":	2 },
+{ "id":	6,	"parentId":	4 },
+{ "id":	7,	"parentId":	5 }
+]
+  </textarea>
+  <br/>
+  <button type="submit" class="btn btn-primary">Преобразовать</button>
+</form>
 
 {% endblock %}

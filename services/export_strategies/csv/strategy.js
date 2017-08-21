@@ -1,11 +1,12 @@
+const conform = require("conform");
 const json2csv = require("json2csv");
 const fs = require("fs");
 const strategy = {};
 
 /**
- * Put here some words
+ * Export data as CSV
  */
-strategy.export = (docs, body, exportDir) => {
+strategy.export = (docs, body, res, exportDir) => {
   return new Promise((resolve, reject) => {
 
     const delimiter = body.delimiter || ",";
@@ -21,7 +22,7 @@ strategy.export = (docs, body, exportDir) => {
         return reject(error);
       }
       resolve({
-        fileName: "file.csv", 
+        fileName: "file.csv",
         filePath: filePath
       });
     });

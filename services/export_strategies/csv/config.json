@@ -1,3 +1,12 @@
 {
-  "title": "CSV"
+  "title": "CSV",
+  "validation_fields": {
+    "delimiter": {
+      "description": "Разделитель",
+      "type": "string",
+      "required": true,
+      "minLength": 1, 
+      "message": "Укажите разделитель, который будет использоваться в CSV-файле"
+    }
+  }
 }

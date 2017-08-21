@@ -2,9 +2,9 @@ const fs = require("fs");
 const strategy = {};
 
 /**
- * Put here some words
+ * Export data as SQL
  */
-strategy.export = (docs, body, exportDir) => {
+strategy.export = (docs, body, res, exportDir) => {
   return new Promise((resolve, reject) => {
 
     const tableName = body.table_name;
@@ -57,7 +57,7 @@ CREATE TABLE ${tableName} (
         return reject(error);
       }
       resolve({
-        fileName: "file.sql", 
+        fileName: "file.sql",
         filePath: filePath
       });
     });

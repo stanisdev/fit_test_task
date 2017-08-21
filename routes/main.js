@@ -2,8 +2,10 @@ const conform = require("conform");
 const request = require("request");
 const Bluebird = require("bluebird");
 const nunjucks = require("nunjucks");
+const _ = require("lodash");
 const glob = require("glob");
 const fs = require("fs");
+const path = require("path");
 
 /**
  * Main actions
@@ -24,17 +26,31 @@ module.exports = (app) => {
    * Task first and second
    */
   app.get("/task-1-2", (req, res) => {
-    // Load html-representation's all transformation ways
-    app.get("services").intermedium.loadHtmlRepresentations(app.get("config"), "transformation_ways", "обработки").then(ways => {
-      res.render("main/task-1-2.html", {
+    const collection = app.get("db").connection.collection("parsed_data");
+    collection.find({}).limit(1).toArray(function(error, docs) {
+      if (error) {
+        console.log(error);
+        return res.send("Ошибка во время выборки данных из БД");
+      }
+      const renderInfo = {
         body_title: "Задание 1 и 2",
         page_header: "Обработка данных с reddit",
-        ways: ways
+      };
+      if (!Array.isArray(docs) || docs.length < 1) { // Parsed_data collection is empty
+        return res.render("main/task-1-2.html", Object.assign(renderInfo, {
+          initial_running: true
+        }));
+      }
+      // Load html-representation's all transformation ways
+      app.get("services").intermedium.loadHtmlRepresentations(app.get("config"), "transformation_ways", "обработки").then(ways => {
+        res.render("main/task-1-2.html", Object.assign(renderInfo, {
+          ways: ways
+        }));
+      }).catch(error => {
+        console.log(error);
+        let message = typeof error == "string" ? error : "Непредвиденная ошибка";
+        res.send(message);
       });
-    }).catch(error => {
-      console.log(error);
-      let message = typeof error == "string" ? error : "Непредвиденная ошибка";
-      res.send(message);
     });
   });
 
@@ -49,7 +65,7 @@ module.exports = (app) => {
   });
 
   /**
-   * Describe me
+   * Load json from reddit and parse it
    */
   app.post("/load-json-from-reddit", (req, res) => {
     const checking = conform.validate(req.body, {
@@ -86,13 +102,13 @@ module.exports = (app) => {
         query: "insertMany",
         data: jsonedData
       }).then(docs => {
-        res.redirect("back");
+        res.redirect("/task-1-2");
       }).catch(app.get("services").intermedium.printError.bind(null, res));
     });
   });
 
   /**
-   * Describe me
+   * Transform data by specified way
    */
   app.post("/transform-data", (req, res) => {
     const wayType = req.query.way;
@@ -117,12 +133,12 @@ module.exports = (app) => {
   });
 
   /**
-   * Describe me
+   * Show form to use necessary export strategy
    */
   app.get("/task-1-2/treatment", (req, res) => {
     app.get("services").intermedium.loadHtmlRepresentations(app.get("config"), "export_strategies", "экспорта").then(strategies => {
       res.render("main/treatment.html", {
-        body_title: "Задание 3 :: Экспорт данных",
+        body_title: "Задание 1, 2 :: Экспорт данных",
         page_header: "Экспорт",
         strategies: strategies
       });
@@ -134,7 +150,7 @@ module.exports = (app) => {
   });
 
   /**
-   * Describe me
+   * Export data by downloading it
    */
   app.post("/export-data", (req, res) => {
     const strategyType = req.query.strategy;
@@ -171,8 +187,29 @@ module.exports = (app) => {
               resolve();
             }
           })).then(() => {
+            // To validate post-fields
+            const config = require(path.dirname(strategyPath) + "/config.json");
+            if (config instanceof Object && "validation_fields" in config) {
+              const checking = conform.validate(req.body, {
+                properties: Object.assign({}, config.validation_fields)
+              });
+              if (!(checking instanceof Object) || !checking.valid) {
+                return app.get("services").intermedium.loadHtmlRepresentations(app.get("config"), "export_strategies", "экспорта").then(strategies => {
+                  res.render("main/treatment.html", {
+                    body_title: "Задание 1, 2 :: Экспорт данных",
+                    page_header: "Экспорт",
+                    strategies: strategies,
+                    errors: checking.errors
+                  });
+                }).catch(error => {
+                  console.log(error);
+                  let message = typeof error == "string" ? error : "Непредвиденная ошибка";
+                  res.send(message);
+                });
+              }
+            }
             // Execute export strategy
-            strategy.export(docs, req.body, app.get("config").tmp_dir).then(data => {
+            strategy.export(docs, req.body, res, app.get("config").tmp_dir).then(data => {
 
               // Download file
               res.setHeader("Content-disposition", `attachment; filename=${data.fileName}`);
@@ -190,5 +227,73 @@ module.exports = (app) => {
         });
       });
     });
+  });
+
+  /**
+   * Transform array to dendritic representation
+   */
+  app.post("/transform-array", (req, res) => {
+    const checking = conform.validate(req.body, {
+      properties: {
+        array: {
+          description: "Поле для ввода массива",
+          type: "string",
+          required: true,
+          message: "Укажите массива для преобразования"
+        }
+      }
+    });
+    if (!(checking instanceof Object) || !checking.valid) {
+      return res.render("main/task-3.html", {
+        body_title: "Задание 3",
+        page_header: "Преобразование массива",
+        errors: checking.errors
+      });
+    }
+    try {
+      var arr = req.body.array.replace(/[\t\n\s]/g, "");
+      arr = JSON.parse(arr);
+    } catch (err) {
+      console.log(err);
+      return res.json("Переданный массив не корректен");
+    }
+    var result = [];
+
+    // 1. Найти наименьшие id родителей, которых не существуют в массиве
+    const no_parent = arr.filter(e => {
+      return !_.find(arr, a => a.id == e.parentId);
+    });
+
+    // 2. Удалить их
+    arr = arr.filter(e => {
+      return !_.find(no_parent, a => a.id == e.id);
+    });
+
+    // Начинаем обходить с первых детей и вглубь
+    no_parent.forEach(e => {
+      find_children(e);
+      result.push(e);
+    });
+
+    function find_children(parent) {
+      if (arr.length < 1) {
+        return;
+      }
+      let children = arr.filter(e => {
+        return parent.id == e.parentId;
+      });
+      if (children.length > 0) { // Дети найдены
+        parent.children = children;
+        children.forEach(child => { // Удалим найденых детей из основного массива
+          arr = arr.filter(e => {
+            return e.id != child.id;
+          });
+        });
+        parent.children.forEach(e => {
+          find_children(e); // Призываем на помощь рекурсию
+        });
+      }
+    }
+    res.json(result);
   });
 };

@@ -2,7 +2,7 @@ const moment = require("moment");
 const way = {};
 
 /**
- * Put some describing here
+ * Transform data by sorting
  */
 way.transform = (app, body) => {
   return new Promise((resolve, reject) => {
