@@ -1,6 +1,8 @@
-const conform = require("conform");
-const json2csv = require("json2csv");
-const fs = require("fs");
+'use strict';
+
+const conform = require('conform');
+const json2csv = require('json2csv');
+const fs = require('fs');
 const strategy = {};
 
 /**
@@ -9,7 +11,7 @@ const strategy = {};
 strategy.export = (docs, body, res, exportDir) => {
   return new Promise((resolve, reject) => {
 
-    const delimiter = body.delimiter || ",";
+    const delimiter = body.delimiter || ',';
     const fields = Object.keys(docs[0]);
     const csv = json2csv({
       data: docs,
@@ -22,7 +24,7 @@ strategy.export = (docs, body, res, exportDir) => {
         return reject(error);
       }
       resolve({
-        fileName: "file.csv",
+        fileName: 'file.csv',
         filePath: filePath
       });
     });

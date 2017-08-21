@@ -1,3 +1,5 @@
+'use strict';
+
 const way = {};
 
 /**
@@ -8,15 +10,15 @@ way.transform = (app, body) => {
 
     const order = body.sorting_order;
     const sorting = {
-      total_count: order == "asc" ? 1 : -1
+      total_count: order == 'asc' ? 1 : -1
     };
-    const collection = app.get("db").connection.collection("parsed_data");
+    const collection = app.get('db').connection.collection('parsed_data');
     collection.aggregate([
       {
         $group: {
-          _id: "$domain",
+          _id: '$domain',
           total_count: { $sum: 1 },
-          score_sum: { $sum: "$score" }
+          score_sum: { $sum: '$score' }
         }
       },
       {
@@ -24,7 +26,7 @@ way.transform = (app, body) => {
       },
       {
         $project: {
-          domain: "$_id",
+          domain: '$_id',
           total_count: 1,
           score_sum: 1,
           _id: 0

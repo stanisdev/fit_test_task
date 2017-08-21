@@ -1,4 +1,6 @@
-const fs = require("fs");
+'use strict';
+
+const fs = require('fs');
 const strategy = {};
 
 /**
@@ -17,13 +19,13 @@ CREATE TABLE ${tableName} (
     const tableFilds = Object.keys(docs[0]);
     tableFilds.forEach(fieldName => {
       switch (typeof docs[0][fieldName]) {
-        case "number":
+        case 'number':
           sql += `  ${fieldName} int not null, \n`;
           break;
-        case "string":
+        case 'string':
           sql += `  ${fieldName} varchar(255) not null, \n`;
           break;
-        case "boolean":
+        case 'boolean':
           sql += `  ${fieldName} tinyint(1) not null, \n`;
           break;
         default:
@@ -44,7 +46,7 @@ CREATE TABLE ${tableName} (
       sql += "(";
       for (let fieldName in doc) {
         let value = doc[fieldName];
-        sql += typeof value == "string" ? `"${value}", ` : `${value}, `;
+        sql += typeof value == 'string' ? `"${value}", ` : `${value}, `;
       }
       sql = sql.slice(0, -2);
       sql += "),\n";
@@ -57,7 +59,7 @@ CREATE TABLE ${tableName} (
         return reject(error);
       }
       resolve({
-        fileName: "file.sql",
+        fileName: 'file.sql',
         filePath: filePath
       });
     });

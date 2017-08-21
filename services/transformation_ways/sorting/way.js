@@ -1,4 +1,6 @@
-const moment = require("moment");
+'use strict';
+
+const moment = require('moment');
 const way = {};
 
 /**
@@ -11,8 +13,8 @@ way.transform = (app, body) => {
     const order = body.sorting_order;
 
     const sorting = {};
-    sorting[field] = order == "asc" ? 1 : -1;
-    const collection = app.get("db").connection.collection("parsed_data");
+    sorting[field] = order == 'asc' ? 1 : -1;
+    const collection = app.get('db').connection.collection('parsed_data');
     collection.find(null, {
       id: 1,
       title: 1,
@@ -20,8 +22,8 @@ way.transform = (app, body) => {
       score: 1
     }).sort(sorting).toArray(function(error, docs) {
       docs = docs.map(doc => {
-        if ("created" in doc) {
-          doc.created = moment(+(doc.created.toString() + "000")).format("D.MM.YYYY HH:mm:SS");
+        if ('created' in doc) {
+          doc.created = moment(+(doc.created.toString() + '000')).format('D.MM.YYYY HH:mm:SS');
         }
         return doc;
       });

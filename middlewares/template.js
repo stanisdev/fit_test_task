@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * Just useful middleware for handy access to necessary data from templates
  */

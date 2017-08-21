@@ -1,7 +1,7 @@
 'use strict';
 
-const MongoClient = require("mongodb").MongoClient;
-const Bluebird = require("bluebird");
+const MongoClient = require('mongodb').MongoClient;
+const Bluebird = require('bluebird');
 const db = {};
 
 /**
@@ -12,7 +12,7 @@ db.connect = (config) => {
 
     const url = `mongodb://localhost:${config.db.port}/${config.db.name}`;
     Bluebird.promisify(MongoClient.connect)(url).then(connection => {
-      console.log("DB connected successfully");
+      console.log('DB connected successfully');
       db.connection = connection;
       resolve(db);
     }).catch(reject);
